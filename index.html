@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dynamic Deal Desk — Discount Calculator</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #0f1117;
+      --paper: #f5f3ef;
+      --card: #ffffff;
+      --accent: #1a4fd6;
+      --accent-light: #e8eeff;
+      --success: #0d7a4e;
+      --success-bg: #e6f5ee;
+      --warn: #b45309;
+      --warn-bg: #fef3c7;
+      --danger: #b91c1c;
+      --danger-bg: #fee2e2;
+      --border: #e2ddd6;
+      --muted: #6b6560;
+      --shadow: 0 2px 12px rgba(15,17,23,0.08);
+      --shadow-lg: 0 8px 32px rgba(15,17,23,0.12);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--paper);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--ink);
+      color: white;
+      padding: 28px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    header h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.7rem;
+      font-weight: 400;
+      letter-spacing: -0.02em;
+    }
+    header p {
+      font-size: 0.8rem;
+      opacity: 0.5;
+      margin-top: 3px;
+      font-weight: 300;
+    }
+    .badge-live {
+      background: #22c55e;
+      color: white;
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 99px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    /* ── Layout ── */
+    .container {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 36px 24px;
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 28px;
+      align-items: start;
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px;
+      box-shadow: var(--shadow);
+    }
+    .card + .card { margin-top: 20px; }
+    .card-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.15rem;
+      font-weight: 400;
+      margin-bottom: 20px;
+      color: var(--ink);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 14px;
+    }
+
+    /* ── Form ── */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group.full { grid-column: 1 / -1; }
+    label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    input[type="number"], select {
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 13px;
+      font-size: 0.92rem;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--ink);
+      background: var(--paper);
+      transition: border-color 0.2s;
+      width: 100%;
+      appearance: none;
+    }
+    input[type="number"]:focus, select:focus {
+      outline: none;
+      border-color: var(--accent);
+      background: white;
+    }
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 14px;
+      background: var(--paper);
+      border-radius: 8px;
+      border: 1.5px solid var(--border);
+      cursor: pointer;
+    }
+    .toggle-row label { cursor: pointer; margin: 0; font-size: 0.85rem; text-transform: none; letter-spacing: 0; color: var(--ink); font-weight: 500; }
+    input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
+
+    /* ── Products ── */
+    .products-list { display: flex; flex-direction: column; gap: 10px; }
+    .product-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 10px;
+      align-items: center;
+      background: var(--paper);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+    .product-name { font-size: 0.88rem; font-weight: 500; }
+    .product-price { font-size: 0.8rem; color: var(--muted); }
+    .qty-control {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .qty-btn {
+      width: 28px; height: 28px;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      background: white;
+      cursor: pointer;
+      font-size: 1rem;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+    .qty-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .qty-num { font-size: 0.88rem; font-weight: 600; min-width: 16px; text-align: center; }
+    .add-btn {
+      background: none;
+      border: 1.5px dashed var(--border);
+      border-radius: 8px;
+      padding: 9px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      color: var(--muted);
+      transition: all 0.2s;
+      width: 100%;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .add-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+    .remove-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 1.1rem;
+      padding: 4px;
+      border-radius: 4px;
+      transition: color 0.2s;
+    }
+    .remove-btn:hover { color: var(--danger); }
+
+    /* ── Calculate button ── */
+    .calc-btn {
+      width: 100%;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 15px;
+      font-size: 1rem;
+      font-weight: 600;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      margin-top: 22px;
+      letter-spacing: 0.01em;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .calc-btn:hover { background: #1340b8; }
+    .calc-btn:active { transform: scale(0.98); }
+
+    /* ── Right panel ── */
+    .panel-sticky { position: sticky; top: 24px; }
+
+    /* ── Status pill ── */
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 99px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      width: 100%;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .status-pill.approved { background: var(--success-bg); color: var(--success); }
+    .status-pill.review   { background: var(--warn-bg);    color: var(--warn); }
+    .status-pill.escalate { background: var(--danger-bg);  color: var(--danger); }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+
+    /* ── Summary rows ── */
+    .summary-rows { display: flex; flex-direction: column; gap: 0; }
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 11px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9rem;
+    }
+    .summary-row:last-child { border-bottom: none; }
+    .summary-row .label { color: var(--muted); }
+    .summary-row .value { font-weight: 600; }
+    .summary-row.big .value { font-size: 1.45rem; color: var(--success); font-family: 'DM Serif Display', serif; }
+    .summary-row.discount .value { color: var(--danger); }
+
+    /* ── Margin bar ── */
+    .margin-section { margin-top: 18px; }
+    .margin-label { display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 7px; }
+    .margin-label .tag { font-weight: 600; }
+    .bar-track {
+      height: 8px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      transition: width 0.5s ease;
+    }
+    .bar-fill.good { background: var(--success); }
+    .bar-fill.warn { background: #f59e0b; }
+    .bar-fill.bad  { background: var(--danger); }
+
+    /* ── Adjustments ── */
+    .adjustments { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+    .adj-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.83rem;
+      padding: 7px 10px;
+      background: var(--paper);
+      border-radius: 6px;
+    }
+    .adj-factor { color: var(--ink); }
+    .adj-val { font-weight: 600; }
+    .adj-val.pos { color: var(--danger); }
+    .adj-val.neg { color: var(--success); }
+
+    /* ── Incentive bar ── */
+    .incentive {
+      background: linear-gradient(135deg, #0f1117 0%, #1a2a5e 100%);
+      border-radius: 12px;
+      padding: 18px 20px;
+      color: white;
+      margin-top: 20px;
+    }
+    .incentive-title { font-family: 'DM Serif Display', serif; font-size: 1rem; margin-bottom: 6px; }
+    .incentive p { font-size: 0.8rem; opacity: 0.7; line-height: 1.5; }
+
+    /* ── Empty state ── */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--muted);
+    }
+    .empty-state .icon { font-size: 2.5rem; margin-bottom: 12px; }
+    .empty-state p { font-size: 0.88rem; line-height: 1.6; }
+
+    /* ── Product selector modal ── */
+    .product-options {
+      display: none;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .product-options.open { display: grid; }
+    .product-option {
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      cursor: pointer;
+      background: white;
+      transition: all 0.15s;
+      text-align: left;
+    }
+    .product-option:hover { border-color: var(--accent); background: var(--accent-light); }
+    .product-option .pname { font-size: 0.82rem; font-weight: 600; }
+    .product-option .pprice { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+
+    @media (max-width: 780px) {
+      .container { grid-template-columns: 1fr; }
+      .panel-sticky { position: static; }
+      .form-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Dynamic Deal Desk</h1>
+    <p>Pre-approved discount calculator · Finance &amp; Sales alignment</p>
+  </div>
+  <span class="badge-live">Live</span>
+</header>
+
+<div class="container">
+
+  <!-- LEFT: Inputs -->
+  <div class="left-col">
+
+    <!-- Products -->
+    <div class="card">
+      <div class="card-title">Products &amp; Quantities</div>
+      <div class="products-list" id="productsList"></div>
+      <div style="margin-top:10px">
+        <button class="add-btn" onclick="toggleProductPicker()">+ Add product</button>
+        <div class="product-options" id="productPicker"></div>
+      </div>
+    </div>
+
+    <!-- Deal Details -->
+    <div class="card">
+      <div class="card-title">Deal Details</div>
+      <div class="form-grid">
+
+        <div class="form-group">
+          <label>Deal Size ($)</label>
+          <input type="number" id="dealSize" value="50000" min="0" step="1000" onchange="calculate()" />
+        </div>
+
+        <div class="form-group">
+          <label>Contract Length</label>
+          <select id="contractLength" onchange="calculate()">
+            <option value="1">1 Year</option>
+            <option value="2">2 Years (+5%)</option>
+            <option value="3">3 Years (+8%)</option>
+            <option value="4">4 Years (+9%)</option>
+            <option value="5">5 Years (+10%)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Deal Type</label>
+          <select id="dealType" onchange="calculate()">
+            <option value="new">New Business</option>
+            <option value="renewal">Renewal</option>
+            <option value="expansion">Expansion</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Region</label>
+          <select id="region" onchange="calculate()">
+            <option value="na">North America</option>
+            <option value="emea">EMEA</option>
+            <option value="apac">APAC (+2%)</option>
+            <option value="emerging">Emerging Market (+3%)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Payment Terms</label>
+          <select id="paymentTerms" onchange="calculate()">
+            <option value="annual">Annual Upfront</option>
+            <option value="quarterly">Quarterly (-2%)</option>
+            <option value="monthly">Monthly (-3%)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Customer Credit Risk</label>
+          <select id="creditRisk" onchange="calculate()">
+            <option value="low">Low (-2% offset)</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">High (-5% offset)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Competitive Pressure</label>
+          <select id="compPressure" onchange="calculate()">
+            <option value="low">Low (-2%)</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">High (+3%)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Partner Tier</label>
+          <select id="partnerTier" onchange="calculate()">
+            <option value="none">No Partner</option>
+            <option value="tier2">Tier 2 Standard (+8%)</option>
+            <option value="tier1">Tier 1 Strategic (+12%)</option>
+          </select>
+        </div>
+
+        <div class="form-group full">
+          <label>Margin Target (%)</label>
+          <input type="number" id="marginTarget" value="60" min="0" max="100" onchange="calculate()" />
+        </div>
+
+      </div>
+      <button class="calc-btn" onclick="calculate()">Calculate Recommended Discount</button>
+    </div>
+  </div>
+
+  <!-- RIGHT: Results -->
+  <div class="panel-sticky">
+    <div class="card" id="resultsPanel">
+      <div class="card-title">Recommendation</div>
+      <div class="empty-state">
+        <div class="icon">⚖️</div>
+        <p>Fill in deal details and click Calculate to see your pre-approved discount recommendation.</p>
+      </div>
+    </div>
+    <div class="incentive">
+      <div class="incentive-title">Sales Leader Incentive</div>
+      <p>Maintain your margin target across all deals to maximize commission. Pre-approved discounts help you close faster while protecting the business.</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ── Product catalog ──────────────────────────────────────────────
+  const CATALOG = [
+    { id: 'sales-hub',    name: 'Sales Hub',        price: 1200,  margin: 0.72 },
+    { id: 'mktg-hub',     name: 'Marketing Hub',    price: 800,   margin: 0.68 },
+    { id: 'svc-hub',      name: 'Service Hub',      price: 1000,  margin: 0.70 },
+    { id: 'ops-hub',      name: 'Operations Hub',   price: 600,   margin: 0.65 },
+    { id: 'cms',          name: 'CMS Pro',           price: 400,   margin: 0.62 },
+    { id: 'analytics',    name: 'Analytics Suite',  price: 900,   margin: 0.74 },
+    { id: 'integration',  name: 'Integration Pack', price: 500,   margin: 0.60 },
+    { id: 'ai-add',       name: 'AI Add-on',        price: 700,   margin: 0.78 },
+  ];
+
+  let cart = []; // { product, qty }
+  let pickerOpen = false;
+
+  function fmt$(n) { return '$' + n.toLocaleString('en-US', { maximumFractionDigits: 0 }); }
+  function fmtP(n) { return (n * 100).toFixed(1) + '%'; }
+
+  // ── Product cart UI ─────────────────────────────────────────────
+  function renderCart() {
+    const list = document.getElementById('productsList');
+    if (cart.length === 0) {
+      list.innerHTML = '<div style="color:var(--muted);font-size:0.85rem;padding:8px 0">No products added yet.</div>';
+      return;
+    }
+    list.innerHTML = cart.map((item, i) => `
+      <div class="product-row">
+        <div>
+          <div class="product-name">${item.product.name}</div>
+          <div class="product-price">${fmt$(item.product.price)}/seat/yr · ${(item.product.margin*100).toFixed(0)}% margin</div>
+        </div>
+        <div class="qty-control">
+          <button class="qty-btn" onclick="changeQty(${i},-1)">−</button>
+          <span class="qty-num">${item.qty}</span>
+          <button class="qty-btn" onclick="changeQty(${i},1)">+</button>
+        </div>
+        <button class="remove-btn" onclick="removeItem(${i})">×</button>
+      </div>
+    `).join('');
+  }
+
+  function toggleProductPicker() {
+    pickerOpen = !pickerOpen;
+    const picker = document.getElementById('productPicker');
+    if (pickerOpen) {
+      const available = CATALOG.filter(p => !cart.find(c => c.product.id === p.id));
+      picker.innerHTML = available.map(p => `
+        <div class="product-option" onclick="addProduct('${p.id}')">
+          <div class="pname">${p.name}</div>
+          <div class="pprice">${fmt$(p.price)}/seat/yr</div>
+        </div>
+      `).join('');
+      picker.classList.add('open');
+    } else {
+      picker.classList.remove('open');
+    }
+  }
+
+  function addProduct(id) {
+    const p = CATALOG.find(c => c.id === id);
+    if (p && !cart.find(c => c.product.id === id)) {
+      cart.push({ product: p, qty: 1 });
+    }
+    pickerOpen = false;
+    document.getElementById('productPicker').classList.remove('open');
+    renderCart();
+    calculate();
+  }
+
+  function changeQty(i, delta) {
+    cart[i].qty = Math.max(1, cart[i].qty + delta);
+    renderCart();
+    calculate();
+  }
+
+  function removeItem(i) {
+    cart.splice(i, 1);
+    renderCart();
+    calculate();
+  }
+
+  // ── Discount engine ─────────────────────────────────────────────
+  function calculate() {
+    const dealSize     = parseFloat(document.getElementById('dealSize').value) || 0;
+    const contractYrs  = parseInt(document.getElementById('contractLength').value);
+    const dealType     = document.getElementById('dealType').value;
+    const region       = document.getElementById('region').value;
+    const payTerms     = document.getElementById('paymentTerms').value;
+    const creditRisk   = document.getElementById('creditRisk').value;
+    const compPressure = document.getElementById('compPressure').value;
+    const partnerTier  = document.getElementById('partnerTier').value;
+    const marginTarget = parseFloat(document.getElementById('marginTarget').value) / 100 || 0.60;
+
+    // Weighted margin from cart (or fallback)
+    let weightedMargin = 0.68;
+    if (cart.length > 0) {
+      const totalSeats = cart.reduce((s, c) => s + c.qty, 0);
+      weightedMargin = cart.reduce((s, c) => s + c.product.margin * c.qty, 0) / totalSeats;
+    }
+
+    // Base discount by deal size
+    let base = 0.05;
+    if (dealSize >= 500000) base = 0.25;
+    else if (dealSize >= 200000) base = 0.20;
+    else if (dealSize >= 100000) base = 0.17;
+    else if (dealSize >= 50000)  base = 0.13;
+    else if (dealSize >= 25000)  base = 0.10;
+    else if (dealSize >= 10000)  base = 0.07;
+
+    // Max allowed
+    let maxDiscount = base + 0.18;
+
+    // Adjustments
+    const adjustments = [];
+
+    // Deal type
+    if (dealType === 'renewal')   adjustments.push({ factor: 'Renewal',        impact: -0.03 });
+    if (dealType === 'expansion') adjustments.push({ factor: 'Expansion',       impact: -0.02 });
+    if (dealType === 'new')       adjustments.push({ factor: 'New Business',    impact:  0.02 });
+
+    // Contract length
+    if (contractYrs === 2) adjustments.push({ factor: '2-Year Contract',   impact:  0.05 });
+    if (contractYrs === 3) adjustments.push({ factor: '3-Year Contract',   impact:  0.08 });
+    if (contractYrs >= 4)  adjustments.push({ factor: `${contractYrs}-Year Contract`, impact: 0.09 + (contractYrs-4)*0.01 });
+
+    // Multi-product bundle
+    if (cart.length >= 2) adjustments.push({ factor: 'Bundle (2+ Products)', impact: 0.05 });
+
+    // Payment terms
+    if (payTerms === 'quarterly') adjustments.push({ factor: 'Quarterly Payment',  impact: -0.02 });
+    if (payTerms === 'monthly')   adjustments.push({ factor: 'Monthly Payment',    impact: -0.03 });
+
+    // Credit risk
+    if (creditRisk === 'high')    adjustments.push({ factor: 'High Credit Risk',   impact: -0.05 });
+    if (creditRisk === 'low')     adjustments.push({ factor: 'Low Credit Risk',    impact:  0.02 });
+
+    // Competition
+    if (compPressure === 'high')  adjustments.push({ factor: 'High Competition',   impact:  0.03 });
+    if (compPressure === 'low')   adjustments.push({ factor: 'Low Competition',    impact: -0.02 });
+
+    // Partner — strategic discount (GRR+2, NRR+2, credit risk 7bps→2bps)
+    if (partnerTier === 'tier2') {
+      adjustments.push({ factor: 'Partner Tier 2 (Standard)', impact: 0.08 });
+      maxDiscount += 0.08; // lift ceiling — partner value justifies it
+    }
+    if (partnerTier === 'tier1') {
+      adjustments.push({ factor: 'Partner Tier 1 (Strategic)', impact: 0.12 });
+      maxDiscount += 0.12;
+    }
+
+    // Region
+    if (region === 'apac')     adjustments.push({ factor: 'APAC Region',       impact:  0.02 });
+    if (region === 'emerging') adjustments.push({ factor: 'Emerging Market',   impact:  0.03 });
+
+    // Total discount
+    const totalAdj = adjustments.reduce((s, a) => s + a.impact, 0);
+    let recommended = Math.min(base + totalAdj, maxDiscount);
+    recommended = Math.max(0, recommended);
+
+    // Financials
+    const discountAmt = dealSize * recommended;
+    const finalPrice  = dealSize - discountAmt;
+    const cost        = dealSize * (1 - weightedMargin);
+    const profit      = finalPrice - cost;
+    const actualMargin = finalPrice > 0 ? profit / finalPrice : 0;
+    const totalContractVal = finalPrice * contractYrs;
+
+    // Status
+    let status, statusLabel;
+    const marginOk = actualMargin >= (marginTarget * 0.9);
+    if (recommended <= base + 0.08 && marginOk) {
+      status = 'approved'; statusLabel = '✓ Pre-Approved';
+    } else if (recommended <= base + 0.14 || marginOk) {
+      status = 'review'; statusLabel = '⚠ Needs Review';
+    } else {
+      status = 'escalate'; statusLabel = '✕ Escalation Required';
+    }
+
+    // Render
+    renderResults({
+      recommended, base, discountAmt, finalPrice, actualMargin,
+      marginTarget, totalContractVal, contractYrs, adjustments,
+      status, statusLabel, weightedMargin
+    });
+  }
+
+  function renderResults(r) {
+    const barPct = Math.min((r.actualMargin / r.marginTarget) * 100, 100);
+    const barClass = barPct >= 90 ? 'good' : barPct >= 70 ? 'warn' : 'bad';
+    const marginColor = r.actualMargin >= r.marginTarget * 0.9
+      ? 'var(--success)' : r.actualMargin >= r.marginTarget * 0.75
+      ? 'var(--warn)' : 'var(--danger)';
+
+    const adjHTML = r.adjustments.length > 0
+      ? r.adjustments.map(a => `
+          <div class="adj-row">
+            <span class="adj-factor">${a.factor}</span>
+            <span class="adj-val ${a.impact > 0 ? 'pos' : 'neg'}">${a.impact > 0 ? '+' : ''}${(a.impact*100).toFixed(0)}%</span>
+          </div>`).join('')
+      : '<div style="color:var(--muted);font-size:0.83rem">No adjustments</div>';
+
+    document.getElementById('resultsPanel').innerHTML = `
+      <div class="card-title">Recommendation</div>
+
+      <div class="status-pill ${r.status}">
+        <span class="status-dot"></span>
+        ${r.statusLabel}
+      </div>
+
+      <div class="summary-rows">
+        <div class="summary-row">
+          <span class="label">List Price</span>
+          <span class="value">${fmt$(parseInt(document.getElementById('dealSize').value)||0)}</span>
+        </div>
+        <div class="summary-row">
+          <span class="label">Base Discount</span>
+          <span class="value">${fmtP(r.base)}</span>
+        </div>
+        <div class="summary-row discount">
+          <span class="label">Recommended Discount</span>
+          <span class="value">${fmtP(r.recommended)}</span>
+        </div>
+        <div class="summary-row discount">
+          <span class="label">Discount Amount</span>
+          <span class="value">−${fmt$(r.discountAmt)}</span>
+        </div>
+        <div class="summary-row big">
+          <span class="label" style="font-weight:600;color:var(--ink)">Final Price</span>
+          <span class="value">${fmt$(r.finalPrice)}</span>
+        </div>
+        ${r.contractYrs > 1 ? `
+        <div class="summary-row">
+          <span class="label">Total Contract Value (${r.contractYrs}yr)</span>
+          <span class="value">${fmt$(r.totalContractVal)}</span>
+        </div>` : ''}
+      </div>
+
+      <div class="margin-section">
+        <div class="margin-label">
+          <span>Actual Margin</span>
+          <span class="tag" style="color:${marginColor}">${fmtP(r.actualMargin)} / target ${fmtP(r.marginTarget)}</span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill ${barClass}" style="width:${barPct}%"></div>
+        </div>
+      </div>
+
+      <div style="margin-top:22px">
+        <div style="font-size:0.78rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Discount Factors</div>
+        <div class="adjustments">${adjHTML}</div>
+      </div>
+    `;
+  }
+
+  // ── Init ─────────────────────────────────────────────────────────
+  renderCart();
+  calculate();
+</script>
+
+</body>
+</html>
