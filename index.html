@@ -1,728 +1,668 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dynamic Deal Desk — Discount Calculator</title>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
-  <style>
-    :root {
-      --ink: #0f1117;
-      --paper: #f5f3ef;
-      --card: #ffffff;
-      --accent: #1a4fd6;
-      --accent-light: #e8eeff;
-      --success: #0d7a4e;
-      --success-bg: #e6f5ee;
-      --warn: #b45309;
-      --warn-bg: #fef3c7;
-      --danger: #b91c1c;
-      --danger-bg: #fee2e2;
-      --border: #e2ddd6;
-      --muted: #6b6560;
-      --shadow: 0 2px 12px rgba(15,17,23,0.08);
-      --shadow-lg: 0 8px 32px rgba(15,17,23,0.12);
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'DM Sans', sans-serif;
-      background: var(--paper);
-      color: var(--ink);
-      min-height: 100vh;
-    }
-
-    /* ── Header ── */
-    header {
-      background: var(--ink);
-      color: white;
-      padding: 28px 40px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    header h1 {
-      font-family: 'DM Serif Display', serif;
-      font-size: 1.7rem;
-      font-weight: 400;
-      letter-spacing: -0.02em;
-    }
-    header p {
-      font-size: 0.8rem;
-      opacity: 0.5;
-      margin-top: 3px;
-      font-weight: 300;
-    }
-    .badge-live {
-      background: #22c55e;
-      color: white;
-      font-size: 0.7rem;
-      font-weight: 600;
-      padding: 4px 10px;
-      border-radius: 99px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    /* ── Layout ── */
-    .container {
-      max-width: 1180px;
-      margin: 0 auto;
-      padding: 36px 24px;
-      display: grid;
-      grid-template-columns: 1fr 380px;
-      gap: 28px;
-      align-items: start;
-    }
-
-    /* ── Cards ── */
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 28px;
-      box-shadow: var(--shadow);
-    }
-    .card + .card { margin-top: 20px; }
-    .card-title {
-      font-family: 'DM Serif Display', serif;
-      font-size: 1.15rem;
-      font-weight: 400;
-      margin-bottom: 20px;
-      color: var(--ink);
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 14px;
-    }
-
-    /* ── Form ── */
-    .form-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 18px;
-    }
-    .form-group { display: flex; flex-direction: column; gap: 6px; }
-    .form-group.full { grid-column: 1 / -1; }
-    label {
-      font-size: 0.78rem;
-      font-weight: 600;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-    }
-    input[type="number"], select {
-      border: 1.5px solid var(--border);
-      border-radius: 8px;
-      padding: 10px 13px;
-      font-size: 0.92rem;
-      font-family: 'DM Sans', sans-serif;
-      color: var(--ink);
-      background: var(--paper);
-      transition: border-color 0.2s;
-      width: 100%;
-      appearance: none;
-    }
-    input[type="number"]:focus, select:focus {
-      outline: none;
-      border-color: var(--accent);
-      background: white;
-    }
-    .toggle-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 11px 14px;
-      background: var(--paper);
-      border-radius: 8px;
-      border: 1.5px solid var(--border);
-      cursor: pointer;
-    }
-    .toggle-row label { cursor: pointer; margin: 0; font-size: 0.85rem; text-transform: none; letter-spacing: 0; color: var(--ink); font-weight: 500; }
-    input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
-
-    /* ── Products ── */
-    .products-list { display: flex; flex-direction: column; gap: 10px; }
-    .product-row {
-      display: grid;
-      grid-template-columns: 1fr auto auto;
-      gap: 10px;
-      align-items: center;
-      background: var(--paper);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 10px 12px;
-    }
-    .product-name { font-size: 0.88rem; font-weight: 500; }
-    .product-price { font-size: 0.8rem; color: var(--muted); }
-    .qty-control {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .qty-btn {
-      width: 28px; height: 28px;
-      border: 1.5px solid var(--border);
-      border-radius: 6px;
-      background: white;
-      cursor: pointer;
-      font-size: 1rem;
-      display: flex; align-items: center; justify-content: center;
-      transition: all 0.15s;
-      flex-shrink: 0;
-    }
-    .qty-btn:hover { border-color: var(--accent); color: var(--accent); }
-    .qty-num { font-size: 0.88rem; font-weight: 600; min-width: 16px; text-align: center; }
-    .add-btn {
-      background: none;
-      border: 1.5px dashed var(--border);
-      border-radius: 8px;
-      padding: 9px;
-      cursor: pointer;
-      font-size: 0.82rem;
-      color: var(--muted);
-      transition: all 0.2s;
-      width: 100%;
-      font-family: 'DM Sans', sans-serif;
-    }
-    .add-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
-    .remove-btn {
-      background: none;
-      border: none;
-      cursor: pointer;
-      color: var(--muted);
-      font-size: 1.1rem;
-      padding: 4px;
-      border-radius: 4px;
-      transition: color 0.2s;
-    }
-    .remove-btn:hover { color: var(--danger); }
-
-    /* ── Calculate button ── */
-    .calc-btn {
-      width: 100%;
-      background: var(--accent);
-      color: white;
-      border: none;
-      border-radius: 10px;
-      padding: 15px;
-      font-size: 1rem;
-      font-weight: 600;
-      font-family: 'DM Sans', sans-serif;
-      cursor: pointer;
-      margin-top: 22px;
-      letter-spacing: 0.01em;
-      transition: background 0.2s, transform 0.1s;
-    }
-    .calc-btn:hover { background: #1340b8; }
-    .calc-btn:active { transform: scale(0.98); }
-
-    /* ── Right panel ── */
-    .panel-sticky { position: sticky; top: 24px; }
-
-    /* ── Status pill ── */
-    .status-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 16px;
-      border-radius: 99px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      width: 100%;
-      justify-content: center;
-      margin-bottom: 20px;
-    }
-    .status-pill.approved { background: var(--success-bg); color: var(--success); }
-    .status-pill.review   { background: var(--warn-bg);    color: var(--warn); }
-    .status-pill.escalate { background: var(--danger-bg);  color: var(--danger); }
-    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
-
-    /* ── Summary rows ── */
-    .summary-rows { display: flex; flex-direction: column; gap: 0; }
-    .summary-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 11px 0;
-      border-bottom: 1px solid var(--border);
-      font-size: 0.9rem;
-    }
-    .summary-row:last-child { border-bottom: none; }
-    .summary-row .label { color: var(--muted); }
-    .summary-row .value { font-weight: 600; }
-    .summary-row.big .value { font-size: 1.45rem; color: var(--success); font-family: 'DM Serif Display', serif; }
-    .summary-row.discount .value { color: var(--danger); }
-
-    /* ── Margin bar ── */
-    .margin-section { margin-top: 18px; }
-    .margin-label { display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 7px; }
-    .margin-label .tag { font-weight: 600; }
-    .bar-track {
-      height: 8px;
-      background: var(--border);
-      border-radius: 99px;
-      overflow: hidden;
-    }
-    .bar-fill {
-      height: 100%;
-      border-radius: 99px;
-      transition: width 0.5s ease;
-    }
-    .bar-fill.good { background: var(--success); }
-    .bar-fill.warn { background: #f59e0b; }
-    .bar-fill.bad  { background: var(--danger); }
-
-    /* ── Adjustments ── */
-    .adjustments { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
-    .adj-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 0.83rem;
-      padding: 7px 10px;
-      background: var(--paper);
-      border-radius: 6px;
-    }
-    .adj-factor { color: var(--ink); }
-    .adj-val { font-weight: 600; }
-    .adj-val.pos { color: var(--danger); }
-    .adj-val.neg { color: var(--success); }
-
-    /* ── Incentive bar ── */
-    .incentive {
-      background: linear-gradient(135deg, #0f1117 0%, #1a2a5e 100%);
-      border-radius: 12px;
-      padding: 18px 20px;
-      color: white;
-      margin-top: 20px;
-    }
-    .incentive-title { font-family: 'DM Serif Display', serif; font-size: 1rem; margin-bottom: 6px; }
-    .incentive p { font-size: 0.8rem; opacity: 0.7; line-height: 1.5; }
-
-    /* ── Empty state ── */
-    .empty-state {
-      text-align: center;
-      padding: 40px 20px;
-      color: var(--muted);
-    }
-    .empty-state .icon { font-size: 2.5rem; margin-bottom: 12px; }
-    .empty-state p { font-size: 0.88rem; line-height: 1.6; }
-
-    /* ── Product selector modal ── */
-    .product-options {
-      display: none;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-top: 10px;
-    }
-    .product-options.open { display: grid; }
-    .product-option {
-      border: 1.5px solid var(--border);
-      border-radius: 8px;
-      padding: 10px 12px;
-      cursor: pointer;
-      background: white;
-      transition: all 0.15s;
-      text-align: left;
-    }
-    .product-option:hover { border-color: var(--accent); background: var(--accent-light); }
-    .product-option .pname { font-size: 0.82rem; font-weight: 600; }
-    .product-option .pprice { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
-
-    @media (max-width: 780px) {
-      .container { grid-template-columns: 1fr; }
-      .panel-sticky { position: static; }
-      .form-grid { grid-template-columns: 1fr; }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Pricing Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .icon {
+            display: inline-block;
+            width: 1.25rem;
+            height: 1.25rem;
+            stroke-width: 2;
+            stroke: currentColor;
+            fill: none;
+        }
+    </style>
 </head>
-<body>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <div id="app" class="p-6">
+        <div class="max-w-7xl mx-auto">
+            <!-- Header -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <div class="flex items-center gap-3 mb-2">
+                    <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <h1 class="text-3xl font-bold text-gray-900">Dynamic Pricing Calculator</h1>
+                </div>
+                <p class="text-gray-600">Intelligent discount recommendations based on deal factors and margin targets</p>
+            </div>
 
-<header>
-  <div>
-    <h1>Dynamic Deal Desk</h1>
-    <p>Pre-approved discount calculator · Finance &amp; Sales alignment</p>
-  </div>
-  <span class="badge-live">Live</span>
-</header>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Input Panel -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">Deal Information</h2>
+                    
+                    <div class="space-y-4">
+                        <!-- Product Selection -->
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="block text-sm font-medium text-gray-700">Products</label>
+                                <button id="addProductBtn" class="text-sm text-indigo-600 hover:text-indigo-700 font-medium">
+                                    + Add Product
+                                </button>
+                            </div>
+                            <div id="productsContainer" class="space-y-2"></div>
+                        </div>
 
-<div class="container">
+                        <!-- Deal Type -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Deal Type</label>
+                            <select id="dealType" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                <option value="new">New Business</option>
+                                <option value="renewal">Renewal</option>
+                                <option value="expansion">Expansion</option>
+                            </select>
+                        </div>
 
-  <!-- LEFT: Inputs -->
-  <div class="left-col">
+                        <!-- Region -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Region</label>
+                            <select id="region" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                <option value="north-america">North America</option>
+                                <option value="emea">EMEA</option>
+                                <option value="apac">APAC</option>
+                                <option value="latam">LATAM</option>
+                                <option value="emerging">Emerging Markets</option>
+                            </select>
+                        </div>
 
-    <!-- Products -->
-    <div class="card">
-      <div class="card-title">Products &amp; Quantities</div>
-      <div class="products-list" id="productsList"></div>
-      <div style="margin-top:10px">
-        <button class="add-btn" onclick="toggleProductPicker()">+ Add product</button>
-        <div class="product-options" id="productPicker"></div>
-      </div>
+                        <!-- Payment Terms -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Payment Terms</label>
+                            <select id="paymentTerms" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                <option value="annual">Annual (upfront)</option>
+                                <option value="quarterly">Quarterly</option>
+                                <option value="monthly">Monthly</option>
+                                <option value="multi-year">Multi-Year Upfront</option>
+                            </select>
+                        </div>
+
+                        <!-- Contract Length -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Contract Length (Years)</label>
+                            <input type="number" id="contractLength" value="1" min="1" max="5" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                            <p id="contractLengthHint" class="text-xs text-gray-500 mt-1"></p>
+                        </div>
+
+                        <!-- Customer Risk -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Customer Credit Risk</label>
+                            <select id="customerRisk" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                <option value="low">Low Risk</option>
+                                <option value="medium">Medium Risk</option>
+                                <option value="high">High Risk</option>
+                            </select>
+                        </div>
+
+                        <!-- Competitive Pressure -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Competitive Pressure</label>
+                            <select id="competitivePressure" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                <option value="low">Low Competition</option>
+                                <option value="medium" selected>Medium Competition</option>
+                                <option value="high">High Competition</option>
+                            </select>
+                        </div>
+
+                        <!-- Partner Tier -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Partner Tier</label>
+                            <select id="partnerTier" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                <option value="none">Direct (No Partner)</option>
+                                <option value="tier-3">Tier 3 - Referral (10% base)</option>
+                                <option value="tier-2">Tier 2 - Standard (20% base)</option>
+                                <option value="tier-1">Tier 1 - Strategic (25% base + incumbency)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results Panel -->
+                <div id="resultsPanel" class="space-y-6"></div>
+            </div>
+
+            <!-- Footer Info -->
+            <div class="mt-6 bg-indigo-50 rounded-lg shadow p-4">
+                <div class="flex items-start gap-3">
+                    <svg class="w-5 h-5 text-indigo-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+                    </svg>
+                    <div class="text-sm text-indigo-900">
+                        <p class="font-semibold mb-1">Sales Leader Incentive</p>
+                        <p class="text-indigo-700">
+                            Maintain 60.0% average margin across all deals to maximize commission. 
+                            Pre-approved discounts help you close faster while meeting margin targets.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Deal Details -->
-    <div class="card">
-      <div class="card-title">Deal Details</div>
-      <div class="form-grid">
+    <script>
+        // Product catalog
+        const products = [
+            { id: 'sales-starter', name: 'Sales Hub - Starter', listPrice: 1200, margin: 0.85 },
+            { id: 'sales-pro', name: 'Sales Hub - Professional', listPrice: 12000, margin: 0.82 },
+            { id: 'sales-enterprise', name: 'Sales Hub - Enterprise', listPrice: 48000, margin: 0.78 },
+            { id: 'marketing-starter', name: 'Marketing Hub - Starter', listPrice: 1800, margin: 0.83 },
+            { id: 'marketing-pro', name: 'Marketing Hub - Professional', listPrice: 18000, margin: 0.80 },
+            { id: 'marketing-enterprise', name: 'Marketing Hub - Enterprise', listPrice: 60000, margin: 0.75 },
+            { id: 'service-pro', name: 'Service Hub - Professional', listPrice: 15000, margin: 0.81 },
+            { id: 'bundle', name: 'Full Platform Bundle', listPrice: 100000, margin: 0.72 }
+        ];
 
-        <div class="form-group">
-          <label>Deal Size ($)</label>
-          <input type="number" id="dealSize" value="50000" min="0" step="1000" onchange="calculate()" />
-        </div>
+        // Partner program structure
+        const partnerProgram = {
+            'tier-1': { discount: 0.25, label: 'Tier 1 (Strategic)', grrBoost: 0.02, nrrBoost: 0.02, creditRiskReduction: 0.05 },
+            'tier-2': { discount: 0.20, label: 'Tier 2', grrBoost: 0.02, nrrBoost: 0.02, creditRiskReduction: 0.05 },
+            'tier-3': { discount: 0.10, label: 'Tier 3 (Referral)', grrBoost: 0.02, nrrBoost: 0.02, creditRiskReduction: 0.05 },
+            'none': { discount: 0, label: 'Direct (No Partner)', grrBoost: 0, nrrBoost: 0, creditRiskReduction: 0 }
+        };
 
-        <div class="form-group">
-          <label>Contract Length</label>
-          <select id="contractLength" onchange="calculate()">
-            <option value="1">1 Year</option>
-            <option value="2">2 Years (+5%)</option>
-            <option value="3">3 Years (+8%)</option>
-            <option value="4">4 Years (+9%)</option>
-            <option value="5">5 Years (+10%)</option>
-          </select>
-        </div>
+        // Base retention assumptions
+        const baseGRR = 0.90;
+        const baseNRR = 1.10;
+        const baseCreditRisk = 0.07;
+        const marginTarget = 0.60;
 
-        <div class="form-group">
-          <label>Deal Type</label>
-          <select id="dealType" onchange="calculate()">
-            <option value="new">New Business</option>
-            <option value="renewal">Renewal</option>
-            <option value="expansion">Expansion</option>
-          </select>
-        </div>
+        // State
+        let dealData = {
+            products: [{ id: 'sales-pro', quantity: 1 }],
+            dealType: 'new',
+            region: 'north-america',
+            paymentTerms: 'annual',
+            contractLength: 1,
+            customerRisk: 'low',
+            competitivePressure: 'medium',
+            partnerTier: 'none'
+        };
 
-        <div class="form-group">
-          <label>Region</label>
-          <select id="region" onchange="calculate()">
-            <option value="na">North America</option>
-            <option value="emea">EMEA</option>
-            <option value="apac">APAC (+2%)</option>
-            <option value="emerging">Emerging Market (+3%)</option>
-          </select>
-        </div>
+        // Utility functions
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(amount);
+        }
 
-        <div class="form-group">
-          <label>Payment Terms</label>
-          <select id="paymentTerms" onchange="calculate()">
-            <option value="annual">Annual Upfront</option>
-            <option value="quarterly">Quarterly (-2%)</option>
-            <option value="monthly">Monthly (-3%)</option>
-          </select>
-        </div>
+        function formatPercent(decimal) {
+            return (decimal * 100).toFixed(1) + '%';
+        }
 
-        <div class="form-group">
-          <label>Customer Credit Risk</label>
-          <select id="creditRisk" onchange="calculate()">
-            <option value="low">Low (-2% offset)</option>
-            <option value="medium" selected>Medium</option>
-            <option value="high">High (-5% offset)</option>
-          </select>
-        </div>
+        // Render products
+        function renderProducts() {
+            const container = document.getElementById('productsContainer');
+            container.innerHTML = dealData.products.map((item, index) => {
+                const product = products.find(p => p.id === item.id);
+                return `
+                    <div class="flex gap-2 items-center bg-gray-50 p-3 rounded-lg">
+                        <select data-index="${index}" class="product-select flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm">
+                            ${products.map(p => `<option value="${p.id}" ${p.id === item.id ? 'selected' : ''}>${p.name}</option>`).join('')}
+                        </select>
+                        <input type="number" data-index="${index}" value="${item.quantity}" min="1" 
+                            class="quantity-input w-20 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm" 
+                            placeholder="Qty">
+                        <div class="text-sm font-semibold text-gray-700 w-24 text-right">
+                            ${formatCurrency(product.listPrice * item.quantity)}
+                        </div>
+                        ${dealData.products.length > 1 ? `
+                            <button data-index="${index}" class="remove-product text-red-600 hover:text-red-700 text-sm font-medium">
+                                ✕
+                            </button>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
 
-        <div class="form-group">
-          <label>Competitive Pressure</label>
-          <select id="compPressure" onchange="calculate()">
-            <option value="low">Low (-2%)</option>
-            <option value="medium" selected>Medium</option>
-            <option value="high">High (+3%)</option>
-          </select>
-        </div>
+            // Add event listeners
+            document.querySelectorAll('.product-select').forEach(el => {
+                el.addEventListener('change', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    dealData.products[index].id = e.target.value;
+                    calculate();
+                });
+            });
 
-        <div class="form-group">
-          <label>Partner Tier</label>
-          <select id="partnerTier" onchange="calculate()">
-            <option value="none">No Partner</option>
-            <option value="tier2">Tier 2 Standard (+8%)</option>
-            <option value="tier1">Tier 1 Strategic (+12%)</option>
-          </select>
-        </div>
+            document.querySelectorAll('.quantity-input').forEach(el => {
+                el.addEventListener('input', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    dealData.products[index].quantity = parseInt(e.target.value) || 1;
+                    calculate();
+                });
+            });
 
-        <div class="form-group full">
-          <label>Margin Target (%)</label>
-          <input type="number" id="marginTarget" value="60" min="0" max="100" onchange="calculate()" />
-        </div>
+            document.querySelectorAll('.remove-product').forEach(el => {
+                el.addEventListener('click', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    dealData.products.splice(index, 1);
+                    calculate();
+                });
+            });
+        }
 
-      </div>
-      <button class="calc-btn" onclick="calculate()">Calculate Recommended Discount</button>
-    </div>
-  </div>
+        // Calculate discount
+        function calculateDiscount() {
+            let totalListPrice = 0;
+            let weightedMargin = 0;
+            
+            dealData.products.forEach(item => {
+                const product = products.find(p => p.id === item.id);
+                const itemValue = product.listPrice * item.quantity;
+                totalListPrice += itemValue;
+                weightedMargin += product.margin * itemValue;
+            });
+            
+            weightedMargin = weightedMargin / totalListPrice;
+            const isMultiProduct = dealData.products.length > 1;
+            
+            const partner = partnerProgram[dealData.partnerTier];
+            
+            let baseDiscount = 0;
+            let maxDiscount = 0;
 
-  <!-- RIGHT: Results -->
-  <div class="panel-sticky">
-    <div class="card" id="resultsPanel">
-      <div class="card-title">Recommendation</div>
-      <div class="empty-state">
-        <div class="icon">⚖️</div>
-        <p>Fill in deal details and click Calculate to see your pre-approved discount recommendation.</p>
-      </div>
-    </div>
-    <div class="incentive">
-      <div class="incentive-title">Sales Leader Incentive</div>
-      <p>Maintain your margin target across all deals to maximize commission. Pre-approved discounts help you close faster while protecting the business.</p>
-    </div>
-  </div>
+            if (dealData.partnerTier !== 'none') {
+                baseDiscount = partner.discount;
+                maxDiscount = partner.discount + 0.10;
+                
+                if (dealData.partnerTier === 'tier-1') {
+                    maxDiscount = partner.discount + 0.12;
+                }
+            } else {
+                if (totalListPrice >= 50000) {
+                    baseDiscount = 0.15;
+                    maxDiscount = 0.25;
+                } else if (totalListPrice >= 20000) {
+                    baseDiscount = 0.10;
+                    maxDiscount = 0.20;
+                } else if (totalListPrice >= 10000) {
+                    baseDiscount = 0.05;
+                    maxDiscount = 0.15;
+                } else {
+                    baseDiscount = 0.02;
+                    maxDiscount = 0.10;
+                }
+            }
 
-</div>
+            let adjustments = [];
+            
+            if (isMultiProduct) {
+                adjustments.push({ factor: 'Multi-Product Bundle', impact: 0.05 });
+            }
+            
+            if (dealData.dealType === 'renewal') {
+                adjustments.push({ factor: 'Renewal Customer', impact: -0.03 });
+                if (dealData.partnerTier === 'tier-1') {
+                    adjustments.push({ factor: 'Tier 1 Incumbency Rights', impact: 0.05 });
+                }
+            } else if (dealData.dealType === 'expansion') {
+                adjustments.push({ factor: 'Expansion Deal', impact: -0.05 });
+            } else {
+                adjustments.push({ factor: 'New Customer', impact: 0.02 });
+            }
 
-<script>
-  // ── Product catalog ──────────────────────────────────────────────
-  const CATALOG = [
-    { id: 'sales-hub',    name: 'Sales Hub',        price: 1200,  margin: 0.72 },
-    { id: 'mktg-hub',     name: 'Marketing Hub',    price: 800,   margin: 0.68 },
-    { id: 'svc-hub',      name: 'Service Hub',      price: 1000,  margin: 0.70 },
-    { id: 'ops-hub',      name: 'Operations Hub',   price: 600,   margin: 0.65 },
-    { id: 'cms',          name: 'CMS Pro',           price: 400,   margin: 0.62 },
-    { id: 'analytics',    name: 'Analytics Suite',  price: 900,   margin: 0.74 },
-    { id: 'integration',  name: 'Integration Pack', price: 500,   margin: 0.60 },
-    { id: 'ai-add',       name: 'AI Add-on',        price: 700,   margin: 0.78 },
-  ];
+            if (dealData.contractLength >= 3) {
+                adjustments.push({ factor: '3+ Year Contract', impact: 0.08 });
+            } else if (dealData.contractLength === 2) {
+                adjustments.push({ factor: '2 Year Contract', impact: 0.05 });
+            }
 
-  let cart = []; // { product, qty }
-  let pickerOpen = false;
+            if (dealData.paymentTerms === 'multi-year') {
+                adjustments.push({ factor: 'Multi-Year Upfront Payment', impact: 0.03 });
+            } else if (dealData.paymentTerms === 'quarterly') {
+                adjustments.push({ factor: 'Quarterly Payment', impact: -0.02 });
+            } else if (dealData.paymentTerms === 'monthly') {
+                adjustments.push({ factor: 'Monthly Payment', impact: -0.03 });
+            }
 
-  function fmt$(n) { return '$' + n.toLocaleString('en-US', { maximumFractionDigits: 0 }); }
-  function fmtP(n) { return (n * 100).toFixed(1) + '%'; }
+            if (dealData.customerRisk === 'high' && dealData.partnerTier === 'none') {
+                adjustments.push({ factor: 'High Credit Risk', impact: -0.05 });
+            } else if (dealData.customerRisk === 'low') {
+                adjustments.push({ factor: 'Low Credit Risk', impact: 0.02 });
+            }
 
-  // ── Product cart UI ─────────────────────────────────────────────
-  function renderCart() {
-    const list = document.getElementById('productsList');
-    if (cart.length === 0) {
-      list.innerHTML = '<div style="color:var(--muted);font-size:0.85rem;padding:8px 0">No products added yet.</div>';
-      return;
-    }
-    list.innerHTML = cart.map((item, i) => `
-      <div class="product-row">
-        <div>
-          <div class="product-name">${item.product.name}</div>
-          <div class="product-price">${fmt$(item.product.price)}/seat/yr · ${(item.product.margin*100).toFixed(0)}% margin</div>
-        </div>
-        <div class="qty-control">
-          <button class="qty-btn" onclick="changeQty(${i},-1)">−</button>
-          <span class="qty-num">${item.qty}</span>
-          <button class="qty-btn" onclick="changeQty(${i},1)">+</button>
-        </div>
-        <button class="remove-btn" onclick="removeItem(${i})">×</button>
-      </div>
-    `).join('');
-  }
+            if (dealData.competitivePressure === 'high') {
+                adjustments.push({ factor: 'High Competition', impact: 0.03 });
+            } else if (dealData.competitivePressure === 'low') {
+                adjustments.push({ factor: 'Low Competition', impact: -0.02 });
+            }
 
-  function toggleProductPicker() {
-    pickerOpen = !pickerOpen;
-    const picker = document.getElementById('productPicker');
-    if (pickerOpen) {
-      const available = CATALOG.filter(p => !cart.find(c => c.product.id === p.id));
-      picker.innerHTML = available.map(p => `
-        <div class="product-option" onclick="addProduct('${p.id}')">
-          <div class="pname">${p.name}</div>
-          <div class="pprice">${fmt$(p.price)}/seat/yr</div>
-        </div>
-      `).join('');
-      picker.classList.add('open');
-    } else {
-      picker.classList.remove('open');
-    }
-  }
+            if (dealData.region === 'emerging') {
+                adjustments.push({ factor: 'Emerging Market', impact: 0.03 });
+            } else if (dealData.region === 'apac') {
+                adjustments.push({ factor: 'APAC Region', impact: 0.02 });
+            }
 
-  function addProduct(id) {
-    const p = CATALOG.find(c => c.id === id);
-    if (p && !cart.find(c => c.product.id === id)) {
-      cart.push({ product: p, qty: 1 });
-    }
-    pickerOpen = false;
-    document.getElementById('productPicker').classList.remove('open');
-    renderCart();
-    calculate();
-  }
+            if (dealData.partnerTier !== 'none') {
+                adjustments.push({ factor: `${partner.label} Base`, impact: partner.discount, isBase: true });
+            }
 
-  function changeQty(i, delta) {
-    cart[i].qty = Math.max(1, cart[i].qty + delta);
-    renderCart();
-    calculate();
-  }
+            const incrementalAdjustments = adjustments.filter(a => !a.isBase);
+            const totalAdjustment = incrementalAdjustments.reduce((sum, adj) => sum + adj.impact, 0);
+            let recommendedDiscount = Math.min(baseDiscount + totalAdjustment, maxDiscount);
+            recommendedDiscount = Math.max(0, recommendedDiscount);
 
-  function removeItem(i) {
-    cart.splice(i, 1);
-    renderCart();
-    calculate();
-  }
+            const discountAmount = totalListPrice * recommendedDiscount;
+            const finalPrice = totalListPrice - discountAmount;
+            const cost = totalListPrice * (1 - weightedMargin);
+            const profit = finalPrice - cost;
+            const dealMargin = profit / finalPrice;
+            
+            const effectiveGRR = baseGRR + partner.grrBoost;
+            const effectiveNRR = baseNRR + partner.nrrBoost;
+            const effectiveCreditRisk = baseCreditRisk - partner.creditRiskReduction;
+            
+            const year1Value = profit;
+            const year2Value = dealData.dealType === 'new' 
+                ? finalPrice * effectiveGRR * effectiveNRR * dealMargin * (1 - effectiveCreditRisk)
+                : finalPrice * effectiveNRR * dealMargin * (1 - effectiveCreditRisk);
+            const year3Value = dealData.dealType === 'new'
+                ? finalPrice * effectiveGRR * Math.pow(effectiveNRR, 2) * dealMargin * (1 - effectiveCreditRisk)
+                : finalPrice * Math.pow(effectiveNRR, 2) * dealMargin * (1 - effectiveCreditRisk);
+            
+            const totalLTV = year1Value + year2Value + year3Value;
+            const effectiveMargin = totalLTV / (finalPrice * 3);
+            
+            let status = 'approved';
+            let statusMessage = 'Pre-approved - No escalation needed';
+            
+            const marginToCheck = dealData.partnerTier !== 'none' ? effectiveMargin : dealMargin;
+            
+            if (marginToCheck < marginTarget) {
+                status = 'warning';
+                statusMessage = dealData.partnerTier !== 'none' 
+                    ? 'Below margin target even with partner benefits - Sales leader review recommended'
+                    : 'Below margin target - Sales leader review recommended';
+            }
+            
+            if (recommendedDiscount > maxDiscount * 0.95) {
+                status = 'escalation';
+                statusMessage = 'Near discount limit - Finance approval required';
+            }
+            
+            if (dealData.partnerTier !== 'none' && recommendedDiscount <= partner.discount + 0.05) {
+                status = 'approved';
+                statusMessage = `Pre-approved ${partner.label} deal - Partner benefits justify discount`;
+            }
 
-  // ── Discount engine ─────────────────────────────────────────────
-  function calculate() {
-    const dealSize     = parseFloat(document.getElementById('dealSize').value) || 0;
-    const contractYrs  = parseInt(document.getElementById('contractLength').value);
-    const dealType     = document.getElementById('dealType').value;
-    const region       = document.getElementById('region').value;
-    const payTerms     = document.getElementById('paymentTerms').value;
-    const creditRisk   = document.getElementById('creditRisk').value;
-    const compPressure = document.getElementById('compPressure').value;
-    const partnerTier  = document.getElementById('partnerTier').value;
-    const marginTarget = parseFloat(document.getElementById('marginTarget').value) / 100 || 0.60;
+            return {
+                recommendedDiscount,
+                maxDiscount,
+                discountAmount,
+                finalPrice,
+                totalListPrice,
+                cost,
+                profit,
+                dealMargin,
+                effectiveMargin,
+                effectiveGRR,
+                effectiveNRR,
+                effectiveCreditRisk,
+                totalLTV,
+                year1Value,
+                year2Value,
+                year3Value,
+                adjustments,
+                status,
+                statusMessage,
+                isPartnerDeal: dealData.partnerTier !== 'none',
+                isMultiProduct
+            };
+        }
 
-    // Weighted margin from cart (or fallback)
-    let weightedMargin = 0.68;
-    if (cart.length > 0) {
-      const totalSeats = cart.reduce((s, c) => s + c.qty, 0);
-      weightedMargin = cart.reduce((s, c) => s + c.product.margin * c.qty, 0) / totalSeats;
-    }
+        // Render results
+        function renderResults(rec) {
+            const statusColors = {
+                approved: { bg: 'bg-green-50 border-green-200', icon: 'text-green-600', text: 'text-green-900', subtext: 'text-green-700' },
+                warning: { bg: 'bg-yellow-50 border-yellow-200', icon: 'text-yellow-600', text: 'text-yellow-900', subtext: 'text-yellow-700' },
+                escalation: { bg: 'bg-red-50 border-red-200', icon: 'text-red-600', text: 'text-red-900', subtext: 'text-red-700' }
+            };
+            
+            const colors = statusColors[rec.status];
+            const statusTitle = rec.status === 'approved' ? 'Pre-Approved' : rec.status === 'warning' ? 'Review Required' : 'Escalation Required';
+            
+            const discountBarColor = rec.recommendedDiscount / rec.maxDiscount > 0.9 ? 'bg-red-500' :
+                                    rec.recommendedDiscount / rec.maxDiscount > 0.7 ? 'bg-yellow-500' : 'bg-green-500';
+            
+            const marginToCheck = rec.isPartnerDeal ? rec.effectiveMargin : rec.dealMargin;
+            const marginBarColor = marginToCheck >= marginTarget ? 'bg-green-500' : 'bg-red-500';
+            
+            let html = `
+                <!-- Status Card -->
+                <div class="${colors.bg} border-2 rounded-lg shadow-lg p-6">
+                    <div class="flex items-start gap-3">
+                        <svg class="w-6 h-6 ${colors.icon} flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${rec.status === 'approved' ? 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' : 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z'}"></path>
+                        </svg>
+                        <div>
+                            <h3 class="font-bold text-lg ${colors.text}">${statusTitle}</h3>
+                            <p class="text-sm mt-1 ${colors.subtext}">${rec.statusMessage}</p>
+                        </div>
+                    </div>
+                </div>
 
-    // Base discount by deal size
-    let base = 0.05;
-    if (dealSize >= 500000) base = 0.25;
-    else if (dealSize >= 200000) base = 0.20;
-    else if (dealSize >= 100000) base = 0.17;
-    else if (dealSize >= 50000)  base = 0.13;
-    else if (dealSize >= 25000)  base = 0.10;
-    else if (dealSize >= 10000)  base = 0.07;
+                <!-- Pricing Summary -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">Recommended Discount</h3>
+                    
+                    ${rec.isMultiProduct ? `
+                    <div class="mb-4 pb-4 border-b">
+                        <div class="flex items-center gap-2 text-sm text-indigo-600 font-semibold mb-2">
+                            <span>📦</span>
+                            <span>Multi-Product Bundle</span>
+                        </div>
+                        <div class="text-xs text-gray-600">
+                            ${dealData.products.length} products • 5% bundle discount applied
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center pb-3 border-b">
+                            <span class="text-gray-600">Total List Price:</span>
+                            <span class="font-semibold text-lg">${formatCurrency(rec.totalListPrice)}</span>
+                        </div>
+                        
+                        <div class="flex justify-between items-center pb-3 border-b">
+                            <span class="text-gray-600">Recommended Discount:</span>
+                            <span class="font-bold text-xl text-indigo-600">${formatPercent(rec.recommendedDiscount)}</span>
+                        </div>
+                        
+                        <div class="flex justify-between items-center pb-3 border-b">
+                            <span class="text-gray-600">Discount Amount:</span>
+                            <span class="font-semibold text-red-600">-${formatCurrency(rec.discountAmount)}</span>
+                        </div>
+                        
+                        <div class="flex justify-between items-center pt-2">
+                            <span class="text-gray-900 font-semibold">Final Price:</span>
+                            <span class="font-bold text-2xl text-green-600">${formatCurrency(rec.finalPrice)}</span>
+                        </div>
+                        
+                        ${dealData.contractLength > 1 ? `
+                        <div class="bg-blue-50 p-3 rounded-lg mt-3">
+                            <div class="text-sm text-blue-900">
+                                <div class="font-semibold">${dealData.contractLength}-Year Total Contract Value:</div>
+                                <div class="text-2xl font-bold text-blue-600 mt-1">
+                                    ${formatCurrency(rec.finalPrice * dealData.contractLength)}
+                                </div>
+                            </div>
+                        </div>
+                        ` : ''}
+                    </div>
 
-    // Max allowed
-    let maxDiscount = base + 0.18;
+                    <div class="mt-6 pt-4 border-t">
+                        <div class="flex justify-between items-center text-sm text-gray-600 mb-2">
+                            <span>Discount Usage</span>
+                            <span>${formatPercent(rec.recommendedDiscount / rec.maxDiscount)} of max</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="${discountBarColor} h-2 rounded-full transition-all" style="width: ${(rec.recommendedDiscount / rec.maxDiscount) * 100}%"></div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Maximum allowed: ${formatPercent(rec.maxDiscount)}</p>
+                    </div>
+                </div>
 
-    // Adjustments
-    const adjustments = [];
+                <!-- Margin Analysis -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <div class="flex items-center gap-2 mb-4">
+                        <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                        </svg>
+                        <h3 class="text-lg font-bold text-gray-900">Margin Analysis</h3>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center pb-3 border-b">
+                            <span class="text-gray-600">Deal Margin (Year 1):</span>
+                            <span class="font-semibold">${formatPercent(rec.dealMargin)}</span>
+                        </div>
+                        
+                        ${rec.isPartnerDeal ? `
+                        <div class="bg-blue-50 p-3 rounded-lg space-y-2">
+                            <div class="text-sm font-semibold text-blue-900">Partner Benefits:</div>
+                            <div class="text-xs text-blue-800 space-y-1">
+                                <div class="flex justify-between">
+                                    <span>GRR Improvement:</span>
+                                    <span>${formatPercent(rec.effectiveGRR - baseGRR)}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>NRR Improvement:</span>
+                                    <span>${formatPercent(rec.effectiveNRR - baseNRR)}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Credit Risk Reduction:</span>
+                                    <span>${formatPercent(baseCreditRisk - rec.effectiveCreditRisk)}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-between items-center pt-2">
+                            <span class="text-gray-900 font-semibold">Effective Margin (3-yr):</span>
+                            <span class="font-bold text-lg ${rec.effectiveMargin >= marginTarget ? 'text-green-600' : 'text-yellow-600'}">
+                                ${formatPercent(rec.effectiveMargin)}
+                            </span>
+                        </div>
+                        ` : `
+                        <div class="flex justify-between items-center pt-2">
+                            <span class="text-gray-900 font-semibold">Actual Margin:</span>
+                            <span class="font-bold text-lg ${rec.dealMargin >= marginTarget ? 'text-green-600' : 'text-red-600'}">
+                                ${formatPercent(rec.dealMargin)}
+                            </span>
+                        </div>
+                        `}
+                        
+                        <div class="flex justify-between items-center text-sm border-t pt-3">
+                            <span class="text-gray-600">Target Margin:</span>
+                            <span class="font-semibold">${formatPercent(marginTarget)}</span>
+                        </div>
+                    </div>
 
-    // Deal type
-    if (dealType === 'renewal')   adjustments.push({ factor: 'Renewal',        impact: -0.03 });
-    if (dealType === 'expansion') adjustments.push({ factor: 'Expansion',       impact: -0.02 });
-    if (dealType === 'new')       adjustments.push({ factor: 'New Business',    impact:  0.02 });
+                    <div class="mt-4">
+                        <div class="flex justify-between items-center text-sm text-gray-600 mb-2">
+                            <span>Margin Performance</span>
+                            <span>${marginToCheck >= marginTarget ? 'On Target' : 'Below Target'}</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="${marginBarColor} h-2 rounded-full transition-all" style="width: ${Math.min((marginToCheck / marginTarget) * 100, 100)}%"></div>
+                        </div>
+                    </div>
+                </div>
 
-    // Contract length
-    if (contractYrs === 2) adjustments.push({ factor: '2-Year Contract',   impact:  0.05 });
-    if (contractYrs === 3) adjustments.push({ factor: '3-Year Contract',   impact:  0.08 });
-    if (contractYrs >= 4)  adjustments.push({ factor: `${contractYrs}-Year Contract`, impact: 0.09 + (contractYrs-4)*0.01 });
+                ${rec.isPartnerDeal ? `
+                <!-- LTV Breakdown -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">Account LTV (3-Year)</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center pb-2 border-b">
+                            <span class="text-gray-600">Year 1 Profit:</span>
+                            <span class="font-semibold">${formatCurrency(rec.year1Value)}</span>
+                        </div>
+                        <div class="flex justify-between items-center pb-2 border-b">
+                            <span class="text-gray-600">Year 2 Profit:</span>
+                            <span class="font-semibold">${formatCurrency(rec.year2Value)}</span>
+                        </div>
+                        <div class="flex justify-between items-center pb-2 border-b">
+                            <span class="text-gray-600">Year 3 Profit:</span>
+                            <span class="font-semibold">${formatCurrency(rec.year3Value)}</span>
+                        </div>
+                        <div class="flex justify-between items-center pt-2 bg-green-50 p-3 rounded-lg">
+                            <span class="text-gray-900 font-bold">Total LTV:</span>
+                            <span class="font-bold text-xl text-green-600">${formatCurrency(rec.totalLTV)}</span>
+                        </div>
+                        <div class="text-xs text-gray-500 mt-2">
+                            Accounts for ${formatPercent(rec.effectiveGRR)} GRR, 
+                            ${formatPercent(rec.effectiveNRR)} NRR, 
+                            and ${formatPercent(rec.effectiveCreditRisk)} credit risk
+                        </div>
+                    </div>
+                </div>
+                ` : ''}
 
-    // Multi-product bundle
-    if (cart.length >= 2) adjustments.push({ factor: 'Bundle (2+ Products)', impact: 0.05 });
+                <!-- Discount Factors -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">Discount Factors</h3>
+                    <div class="space-y-2">
+                        ${rec.adjustments.map(adj => `
+                            <div class="flex justify-between items-center text-sm py-2 border-b border-gray-100">
+                                <span class="text-gray-700">${adj.factor}</span>
+                                <span class="font-semibold ${adj.impact > 0 ? 'text-red-600' : 'text-green-600'}">
+                                    ${adj.impact > 0 ? '+' : ''}${formatPercent(adj.impact)}
+                                </span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('resultsPanel').innerHTML = html;
+        }
 
-    // Payment terms
-    if (payTerms === 'quarterly') adjustments.push({ factor: 'Quarterly Payment',  impact: -0.02 });
-    if (payTerms === 'monthly')   adjustments.push({ factor: 'Monthly Payment',    impact: -0.03 });
+        // Update contract length hint
+        function updateContractLengthHint() {
+            const hint = document.getElementById('contractLengthHint');
+            const length = dealData.contractLength;
+            if (length >= 3) {
+                hint.textContent = '🎯 3+ year deals get 8% extra discount';
+            } else if (length === 2) {
+                hint.textContent = '🎯 2 year deals get 5% extra discount';
+            } else {
+                hint.textContent = 'Tip: Multi-year contracts unlock higher discounts';
+            }
+        }
 
-    // Credit risk
-    if (creditRisk === 'high')    adjustments.push({ factor: 'High Credit Risk',   impact: -0.05 });
-    if (creditRisk === 'low')     adjustments.push({ factor: 'Low Credit Risk',    impact:  0.02 });
+        // Main calculation and render function
+        function calculate() {
+            renderProducts();
+            updateContractLengthHint();
+            const recommendation = calculateDiscount();
+            renderResults(recommendation);
+        }
 
-    // Competition
-    if (compPressure === 'high')  adjustments.push({ factor: 'High Competition',   impact:  0.03 });
-    if (compPressure === 'low')   adjustments.push({ factor: 'Low Competition',    impact: -0.02 });
+        // Event listeners
+        document.getElementById('addProductBtn').addEventListener('click', () => {
+            dealData.products.push({ id: 'sales-starter', quantity: 1 });
+            calculate();
+        });
 
-    // Partner — strategic discount (GRR+2, NRR+2, credit risk 7bps→2bps)
-    if (partnerTier === 'tier2') {
-      adjustments.push({ factor: 'Partner Tier 2 (Standard)', impact: 0.08 });
-      maxDiscount += 0.08; // lift ceiling — partner value justifies it
-    }
-    if (partnerTier === 'tier1') {
-      adjustments.push({ factor: 'Partner Tier 1 (Strategic)', impact: 0.12 });
-      maxDiscount += 0.12;
-    }
+        ['dealType', 'region', 'paymentTerms', 'customerRisk', 'competitivePressure', 'partnerTier'].forEach(id => {
+            document.getElementById(id).addEventListener('change', (e) => {
+                dealData[id] = e.target.value;
+                calculate();
+            });
+        });
 
-    // Region
-    if (region === 'apac')     adjustments.push({ factor: 'APAC Region',       impact:  0.02 });
-    if (region === 'emerging') adjustments.push({ factor: 'Emerging Market',   impact:  0.03 });
+        document.getElementById('contractLength').addEventListener('input', (e) => {
+            dealData.contractLength = parseInt(e.target.value) || 1;
+            calculate();
+        });
 
-    // Total discount
-    const totalAdj = adjustments.reduce((s, a) => s + a.impact, 0);
-    let recommended = Math.min(base + totalAdj, maxDiscount);
-    recommended = Math.max(0, recommended);
-
-    // Financials
-    const discountAmt = dealSize * recommended;
-    const finalPrice  = dealSize - discountAmt;
-    const cost        = dealSize * (1 - weightedMargin);
-    const profit      = finalPrice - cost;
-    const actualMargin = finalPrice > 0 ? profit / finalPrice : 0;
-    const totalContractVal = finalPrice * contractYrs;
-
-    // Status
-    let status, statusLabel;
-    const marginOk = actualMargin >= (marginTarget * 0.9);
-    if (recommended <= base + 0.08 && marginOk) {
-      status = 'approved'; statusLabel = '✓ Pre-Approved';
-    } else if (recommended <= base + 0.14 || marginOk) {
-      status = 'review'; statusLabel = '⚠ Needs Review';
-    } else {
-      status = 'escalate'; statusLabel = '✕ Escalation Required';
-    }
-
-    // Render
-    renderResults({
-      recommended, base, discountAmt, finalPrice, actualMargin,
-      marginTarget, totalContractVal, contractYrs, adjustments,
-      status, statusLabel, weightedMargin
-    });
-  }
-
-  function renderResults(r) {
-    const barPct = Math.min((r.actualMargin / r.marginTarget) * 100, 100);
-    const barClass = barPct >= 90 ? 'good' : barPct >= 70 ? 'warn' : 'bad';
-    const marginColor = r.actualMargin >= r.marginTarget * 0.9
-      ? 'var(--success)' : r.actualMargin >= r.marginTarget * 0.75
-      ? 'var(--warn)' : 'var(--danger)';
-
-    const adjHTML = r.adjustments.length > 0
-      ? r.adjustments.map(a => `
-          <div class="adj-row">
-            <span class="adj-factor">${a.factor}</span>
-            <span class="adj-val ${a.impact > 0 ? 'pos' : 'neg'}">${a.impact > 0 ? '+' : ''}${(a.impact*100).toFixed(0)}%</span>
-          </div>`).join('')
-      : '<div style="color:var(--muted);font-size:0.83rem">No adjustments</div>';
-
-    document.getElementById('resultsPanel').innerHTML = `
-      <div class="card-title">Recommendation</div>
-
-      <div class="status-pill ${r.status}">
-        <span class="status-dot"></span>
-        ${r.statusLabel}
-      </div>
-
-      <div class="summary-rows">
-        <div class="summary-row">
-          <span class="label">List Price</span>
-          <span class="value">${fmt$(parseInt(document.getElementById('dealSize').value)||0)}</span>
-        </div>
-        <div class="summary-row">
-          <span class="label">Base Discount</span>
-          <span class="value">${fmtP(r.base)}</span>
-        </div>
-        <div class="summary-row discount">
-          <span class="label">Recommended Discount</span>
-          <span class="value">${fmtP(r.recommended)}</span>
-        </div>
-        <div class="summary-row discount">
-          <span class="label">Discount Amount</span>
-          <span class="value">−${fmt$(r.discountAmt)}</span>
-        </div>
-        <div class="summary-row big">
-          <span class="label" style="font-weight:600;color:var(--ink)">Final Price</span>
-          <span class="value">${fmt$(r.finalPrice)}</span>
-        </div>
-        ${r.contractYrs > 1 ? `
-        <div class="summary-row">
-          <span class="label">Total Contract Value (${r.contractYrs}yr)</span>
-          <span class="value">${fmt$(r.totalContractVal)}</span>
-        </div>` : ''}
-      </div>
-
-      <div class="margin-section">
-        <div class="margin-label">
-          <span>Actual Margin</span>
-          <span class="tag" style="color:${marginColor}">${fmtP(r.actualMargin)} / target ${fmtP(r.marginTarget)}</span>
-        </div>
-        <div class="bar-track">
-          <div class="bar-fill ${barClass}" style="width:${barPct}%"></div>
-        </div>
-      </div>
-
-      <div style="margin-top:22px">
-        <div style="font-size:0.78rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Discount Factors</div>
-        <div class="adjustments">${adjHTML}</div>
-      </div>
-    `;
-  }
-
-  // ── Init ─────────────────────────────────────────────────────────
-  renderCart();
-  calculate();
-</script>
-
+        // Initial render
+        calculate();
+    </script>
 </body>
 </html>
